@@ -1,0 +1,23 @@
+# Gradle
+.gradle/
+build/
+
+# IDE
+.idea/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local config
+local.properties
+*Zone.Identifier
+
+#temporary saves
+*.save
+
+# Kotlin/Java build output
+out/
+classes/
+
