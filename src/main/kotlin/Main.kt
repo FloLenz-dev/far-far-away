@@ -49,7 +49,7 @@ fun isLand(pointToCheck: GeoPoint, landPolygons: List<Geometry>): Boolean {
 	if (isLandFreeNemo (pointToCheck)) return false
 	var lat = pointToCheck.lat
 	var lon = pointToCheck.lon
-    val point: Point = GeometryFactory().createPoint(Coordinate(lon, lat)) // ACHTUNG: (lon, lat)!
+    val point: Point = GeometryFactory().createPoint(Coordinate(lon, lat)) // watch out: (lon, lat)!
     return landPolygons.any { it.contains(point) }
 }
 
@@ -70,7 +70,7 @@ fun findMostDistantLandPoint(
 			val current = GeoPoint(lat, lon)
 			lon += stepSize
 
-            // Finde den nächsten Referenzpunkt + seine Distanz
+            // get the nearest reference point and it's distance
             val (nearestRef, minDistance) = referencePoints
                 .map { it to haversine(current, it) }
                 .minByOrNull { it.second } ?: continue
@@ -91,7 +91,7 @@ fun findMostDistantLandPoint(
 }
 
 fun main() {
-    val shapefilePath = "data/ne_10m_land.shp" // Pfad zur .shp-Datei
+    val shapefilePath = "data/ne_10m_land.shp" // path to .shp-Datei
     val landPolygons = loadLandGeometry(shapefilePath)
 
 	val referencePoints = listOf(
@@ -115,7 +115,7 @@ fun main() {
 		GeoPoint (-7.0, 13.0), //central africa, angola/kongo
 		GeoPoint (-9.0, 161.0), //malaita, solomon inseln
 		GeoPoint (4.0, -77.0),	//columbia
-		GeoPoint(48.0, 84.0), //russland, altaische repuclik near kasachstan
+		GeoPoint(48.0, 84.0), //russia, altaische repuclik near kasachstan
 		GeoPoint(-63.0, -58.0), //south shetland islands, antarctica
 		GeoPoint(27.0,-114.0), //mexiko, baja califonia
 		GeoPoint(73.0, 128.0), //north-east siberia
