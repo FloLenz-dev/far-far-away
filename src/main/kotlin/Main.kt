@@ -3,14 +3,15 @@ import org.geotools.data.simple.SimpleFeatureSource
 import org.locationtech.jts.geom.*
 import kotlin.math.*
 import java.io.File
+import kotlinx.serialization.*
+import kotlinx.serialization.cbor.Cbor
 
-//dictionary
-
+@Serializable
 data class GeoPoint(val lat: Double, val lon: Double)
 
-const val EARTH_RADIUS_KM = 6371.0
-
 fun haversine(p1: GeoPoint, p2: GeoPoint): Double {
+    val EARTH_RADIUS_KM = 6371.0
+
     val dLat = Math.toRadians(p2.lat - p1.lat)
     val dLon = Math.toRadians(p2.lon - p1.lon)
     val rLat1 = Math.toRadians(p1.lat)
@@ -45,8 +46,9 @@ fun isLandFreeNemo(pointToCheck: GeoPoint): Boolean{ //check if point is within 
 	return (pointToCheck.lat < -30) and (pointToCheck.lat > -70) and  (pointToCheck.lon > 105) and (pointToCheck.lat < 135)
 }
 
-fun isLand(pointToCheck: GeoPoint, landPolygons: List<Geometry>): Boolean {
-	if (isLandFreeNemo (pointToCheck)) return false
+fun isLand(pointToCheck: GeoPoint, landPolygons: List<Geometry>, visited: mutableMapOf<GeoPoint, Boolean>): Boolean {
+    if (visited.containsKey(pointToCheck)) return visited[pointToCheck]
+    if (isLandFreeNemo (pointToCheck)) point_is_land
 	var lat = pointToCheck.lat
 	var lon = pointToCheck.lon
     val point: Point = GeometryFactory().createPoint(Coordinate(lon, lat)) // watch out: (lon, lat)!
@@ -62,22 +64,30 @@ fun findMostDistantLandPoint(
     var bestPoint = GeoPoint(0.0, 0.0)
     var closestReference = GeoPoint(0.0, 0.0)
     var maxMinDistance = limit
-
 	var lat = 84.0 //no landmass above 84 degree
+
+
+    val visited = mutableMapOf<GeoPoint, Boolean>()
+    val file = File("is_land.json")
+    val bytes = Cbor.encodeToByteArray(visited)
+    visited = Cbor.decodeFromByteArray(bytes)
+    
+    file.writeBytes(bytes)
+    
 	while (lat >= -63.0) { //don't look at antarctica
 		var lon = -180.0
 		while (lon <= 180.0) {
 			val current = GeoPoint(lat, lon)
 			lon += stepSize
 
-            // get the nearest reference point and it's distance
+            // get the nearest reference point and its distance
             val (nearestRef, minDistance) = referencePoints
                 .map { it to haversine(current, it) }
                 .minByOrNull { it.second } ?: continue
 
             if (minDistance >= maxMinDistance) {
 				println("Closest point: Latitude: ${lat}, Longitude: ${lon}")
-				if (!isLand(current, landPolygons)) continue
+				if (!isLand(current, landPolygons, visited)) continue
                 maxMinDistance = minDistance
                 bestPoint = current
                 closestReference = nearestRef
@@ -91,6 +101,7 @@ fun findMostDistantLandPoint(
 }
 
 fun main() {
+    
     val shapefilePath = "data/ne_10m_land.shp" // path to .shp-Datei
     val landPolygons = loadLandGeometry(shapefilePath)
 

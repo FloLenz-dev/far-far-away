@@ -1,6 +1,7 @@
 plugins {
     kotlin("jvm") version "1.9.0"
     application
+	kotlin("plugin.serialization") version "1.9.10"
 }
 
 repositories {
@@ -17,6 +18,8 @@ dependencies {
 		exclude("javax.media", "jai_core")
 	}
 	implementation("javax.media:jai-core:1.1.3")
+	 implementation("org.jetbrains.kotlinx:kotlinx-serialization-cbor:1.6.3")
+
 }
 
 application {
